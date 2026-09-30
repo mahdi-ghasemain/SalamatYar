@@ -50,7 +50,8 @@
     "typecheck": "node --stack-size=8192 node_modules/typescript/bin/tsc --noEmit",
     "lint": "expo lint",
     "test": "node --experimental-strip-types --experimental-test-isolation=none --test tests/*.test.mjs",
-    "format": "prettier --write src tests"
+    "verify:auth": "node scripts/verify-auth.mjs",
+    "format": "prettier --write src tests scripts"
   },
   "private": true
 }
