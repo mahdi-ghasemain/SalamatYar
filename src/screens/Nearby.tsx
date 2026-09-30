@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import { Linking, View } from "react-native";
+import { Linking, Platform, View } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Location from "expo-location";
 import { MapPin, Phone } from "lucide-react-native";
@@ -31,7 +31,8 @@ export default function Nearby() {
     [filter, setFilter] = useState("all"),
     [message, setMessage] = useState(""),
     [busy, setBusy] = useState(false),
-    [searched, setSearched] = useState(false);
+    [searched, setSearched] = useState(false),
+    [denied, setDenied] = useState(false);
   const last = useRef(0);
   async function locate() {
     if (busy) return;
@@ -50,17 +51,58 @@ export default function Nearby() {
     setSelected(null);
     setSearched(false);
     try {
-      const permission = await Location.requestForegroundPermissionsAsync();
-      if (!permission.granted)
+      if (
+        Platform.OS === "web" &&
+        (typeof navigator === "undefined" ||
+          !navigator.geolocation ||
+          !window.isSecureContext)
+      )
         throw new Error(
           t(
-            "مجوز مکان داده نشد. از تنظیمات دستگاه فعال کنید.",
-            "Location permission denied. Enable it in device settings.",
+            "مرورگر در این آدرس اجازه مکان نمی‌دهد. آدرس باید https یا localhost باشد و دسترسی Location در مرورگر آزاد باشد.",
+            "The browser blocks location here. Use an https (or localhost) address and allow Location in the browser.",
           ),
         );
-      const location = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
-      });
+      const permission = await Location.requestForegroundPermissionsAsync();
+      if (!permission.granted) {
+        setDenied(true);
+        throw new Error(
+          permission.canAskAgain
+            ? t(
+                "اجازه مکان داده نشد. دکمه را دوباره بزنید و در پنجره سیستم «Allow» را انتخاب کنید.",
+                "Location was not allowed. Tap again and choose Allow in the system prompt.",
+              )
+            : t(
+                "اجازه مکان بسته شده است. با دکمه «تنظیمات دستگاه» اجازه مکان را روشن کنید.",
+                "Location is blocked. Use the device settings button to turn it on.",
+              ),
+        );
+      }
+      setDenied(false);
+      if (!(await Location.hasServicesEnabledAsync().catch(() => true)))
+        throw new Error(
+          t(
+            "سرویس موقعیت (GPS) دستگاه خاموش است. آن را روشن کنید و دوباره تلاش کنید.",
+            "Location services (GPS) are off. Turn them on and try again.",
+          ),
+        );
+      const location = await (async () => {
+        try {
+          return await Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.Balanced,
+          });
+        } catch {
+          // A recent cached fix beats failing when the GPS is slow.
+          const fallback = await Location.getLastKnownPositionAsync();
+          if (fallback) return fallback;
+          throw new Error(
+            t(
+              "موقعیت فعلی پیدا نشد. کمی بعد یا در فضای بازتر دوباره تلاش کنید.",
+              "Could not get a current fix. Try again shortly or in a more open area.",
+            ),
+          );
+        }
+      })();
       const point = {
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
@@ -232,6 +274,33 @@ export default function Nearby() {
         <Card>
           <Label>{message}</Label>
         </Card>
+      )}
+      {denied && (
+        <Button
+          secondary
+          title={
+            Platform.OS === "web"
+              ? t("راهنمای اجازه در مرورگر", "How to allow in the browser")
+              : t("باز کردن تنظیمات دستگاه", "Open device settings")
+          }
+          onPress={() =>
+            Platform.OS === "web"
+              ? setMessage(
+                  t(
+                    "در نوار آدرس، قفل کنار سایت را بزنید و Location را روی Allow بگذارید، سپس صفحه را نوسازی کنید.",
+                    "Open the site lock icon in the address bar, set Location to Allow, then reload the page.",
+                  ),
+                )
+              : Linking.openSettings().catch(() =>
+                  setMessage(
+                    t(
+                      "تنظیمات باز نشد؛ دستی: Settings → Apps → SalamatYar → Permissions → Location.",
+                      "Could not open settings. Manually: Settings → Apps → SalamatYar → Permissions → Location.",
+                    ),
+                  ),
+                )
+          }
+        />
       )}
       {origin && (
         <>
