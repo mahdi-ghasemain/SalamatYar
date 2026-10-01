@@ -1,0 +1,17 @@
+node_modules
+.git
+.expo
+dist
+artifacts
+docs
+.env
+.env.*
+*.jks
+*.keystore
+*.pem
+*.key
+credentials.json
+android
+ios
+supabase/.temp
+*.log

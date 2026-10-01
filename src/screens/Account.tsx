@@ -11,6 +11,7 @@ export default function Account() {
   const t = (a: string, b: string) => (fa ? a : b);
   const auth = useAuth();
   const { update } = useStore();
+  const [showAccount, setShowAccount] = useState(false);
   const [email, setEmail] = useState(""),
     [password, setPassword] = useState(""),
     [mode, setMode] = useState<"signin" | "signup" | "reset">("signin"),
@@ -86,6 +87,48 @@ export default function Account() {
           "Check your confirmation email, then sign in.",
         ),
       );
+  }
+  function startWithoutAccount() {
+    update((s) => ({ ...s, welcomed: true }));
+    router.replace("/");
+  }
+  if (!auth.session && !auth.recovery && !showAccount) {
+    return (
+      <View style={{ padding: 24, flex: 1, justifyContent: "center", gap: 18 }}>
+        <View style={{ alignItems: "center", gap: 12 }}>
+          <Brand />
+          <Label size={28} weight="700">
+            {t("به سلامت‌یار خوش آمدید", "Welcome to SalamatYar")}
+          </Label>
+          <Label muted>
+            {t(
+              "بدون ایمیل، رمز یا فرم طولانی شروع کنید.",
+              "Get started without an email, password or long form.",
+            )}
+          </Label>
+        </View>
+        <Button
+          title={t("شروع استفاده", "Get started")}
+          onPress={startWithoutAccount}
+        />
+        <Card>
+          <Label>
+            {t(
+              "اطلاعات شما روی همین دستگاه ذخیره می‌شود. با حذف برنامه یا پاک‌کردن داده‌ها ممکن است از دست برود؛ از بخش پشتیبان‌گیری یک نسخه نگه دارید.",
+              "Your information stays on this device. Uninstalling the app or clearing its data may remove it. Keep a copy using Backup.",
+            )}
+          </Label>
+        </Card>
+        <Button
+          secondary
+          title={t(
+            "حساب قبلی دارم / ذخیره آنلاین",
+            "Existing account / online storage",
+          )}
+          onPress={() => setShowAccount(true)}
+        />
+      </View>
+    );
   }
   return (
     <View style={{ padding: 24, flex: 1, justifyContent: "center" }}>
@@ -224,11 +267,8 @@ export default function Account() {
       {!!message && <Label style={{ marginVertical: 14 }}>{message}</Label>}
       <Button
         secondary
-        title={t("ادامه به صورت مهمان", "Continue as guest")}
-        onPress={() => {
-          update((s) => ({ ...s, welcomed: true }));
-          router.replace("/");
-        }}
+        title={t("شروع بدون ثبت‌نام", "Start without signing up")}
+        onPress={startWithoutAccount}
       />
     </View>
   );

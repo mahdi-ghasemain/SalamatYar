@@ -34,6 +34,7 @@ yarn-error.*
 .env*.local
 .env
 docs/vendor/
+artifacts/android-build-status.json
 
 # typescript
 *.tsbuildinfo
