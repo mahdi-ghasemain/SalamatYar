@@ -6,12 +6,14 @@ import { TextInput } from "../components/Typography";
 import { useAuth, oauth, redirectUrl } from "../services/auth";
 import { requireBackend } from "../services/supabase";
 import { useStore } from "../core/store";
+import SmsLogin from "../components/SmsLogin";
 export default function Account() {
   const { fa, colors } = useUI();
   const t = (a: string, b: string) => (fa ? a : b);
   const auth = useAuth();
   const { update } = useStore();
   const [showAccount, setShowAccount] = useState(false);
+  const [showSms, setShowSms] = useState(false);
   const [email, setEmail] = useState(""),
     [password, setPassword] = useState(""),
     [mode, setMode] = useState<"signin" | "signup" | "reset">("signin"),
@@ -93,7 +95,38 @@ export default function Account() {
     router.replace("/");
   }
   if (!auth.session && !auth.recovery && !showAccount) {
+  if (showSms && !auth.session) {
     return (
+      <View style={{ padding: 24, flex: 1, justifyContent: "center" }}>
+        <View style={{ alignItems: "center", marginBottom: 24 }}>
+          <Brand />
+          <Label size={25} weight="700">
+            {t("سلامت‌یار", "SalamatYar")}
+          </Label>
+        </View>
+        {!auth.configured ? (
+          <Card>
+            <Label>
+              {t(
+                "برای فعال شدن ورود پیامکی، آدرس و کلید عمومی پروژه Supabase باید تنظیم شود.",
+                "Configure the Supabase URL and publishable key to enable SMS sign-in.",
+              )}
+            </Label>
+          </Card>
+        ) : (
+          <SmsLogin onBack={() => setShowSms(false)} />
+        )}
+        {auth.configured && (
+          <Button
+            secondary
+            title={t("بازگشت", "Back")}
+            onPress={() => setShowSms(false)}
+          />
+        )}
+      </View>
+    );
+  }
+  return (
       <View style={{ padding: 24, flex: 1, justifyContent: "center", gap: 18 }}>
         <View style={{ alignItems: "center", gap: 12 }}>
           <Brand />

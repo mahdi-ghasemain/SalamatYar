@@ -72,7 +72,6 @@ EXPO_PUBLIC_NEARBY_FUNCTION=nearby
 > اگر خطای `redirect_uri_mismatch` دیدی، یعنی آدرس بالا دقیقاً مطابق نیست.
 
 ## ۷) (اختیاری) تابع ابری نقشه
-
 بدون این هم نقشه و فهرست رایگان مستقیم کار می‌کند؛ این تابع فقط کش سمت سرور و سقف منصفانه اضافه می‌کند:
 
 ```
@@ -81,6 +80,21 @@ npx supabase link --project-ref <ref>
 npx supabase functions deploy nearby
 npx supabase secrets set OVERPASS_URL=https://<your-overpass-endpoint>
 ```
+
+## ۷ب) ورود پیامکی با لیمو اس‌ام‌اس (اختیاری)
+
+برای شماره‌های ایران (`09...`) که پیامک خارجی به آن‌ها نمی‌رسد:
+
+1. در `panel.limosms.com` ثبت‌نام کن و مدارک را بفرست تا **کد دسترسی (ApiKey)** نمایش داده شود. پنل و بسته تست رایگان است؛ هر پیامک بعدی از اعتبار کم می‌شود.
+2. مایگریشن `supabase/migrations/202610070001_sms.sql` را در SQL Editor اجرا کن (جدول‌های `sms_limits` و `sms_accounts` + محدودیت ساعتی).
+3. تابع را منتشر و کلید را فقط روی سرور بگذار (هرگز داخل اپ نه):
+```
+npx supabase login
+npx supabase link --project-ref <ref>
+npx supabase functions deploy sms-otp
+npx supabase secrets set LIMOSMS_API_KEY=<کد دسترسی لیمو>
+```
+4. تست: در اپ **ورود با پیامک** → شماره `09...` → کد → ورود. سقف: ۳ ارسال و ۱۰ تلاش در ساعت برای هر شماره.
 
 ## ۸) آزمون ورود واقعی
 

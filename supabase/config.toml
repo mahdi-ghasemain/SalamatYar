@@ -1,3 +1,7 @@
 [functions.nearby]
 verify_jwt = false
 # The handler validates the bearer token with auth.getUser before any lookup.
+
+[functions.sms-otp]
+verify_jwt = false
+# Pre-login endpoint: rate-limited per number, ApiKey stays server-side.
